@@ -120,13 +120,6 @@ h1 {
   pointer-events: none;
 }
 
-/* 全屏预览图片也不可保存 */
-.overlay img {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
 /* 卡片出场动画 */
 .card.reveal {
   animation: cardReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -303,41 +296,7 @@ h1 {
   letter-spacing: 2px;
 }
 
-/* 全屏预览 */
-.overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.95);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.overlay.open { display: flex; }
-
-.overlay img {
-  max-width: 95vw;
-  max-height: 90vh;
-  border-radius: 8px;
-  object-fit: contain;
-}
-
-.overlay-close {
-  position: absolute;
-  top: 20px;
-  right: 24px;
-  color: #fff;
-  font-size: 28px;
-  cursor: pointer;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1001;
-}
+/* 全屏预览相关已移除 */
 
 /* toast */
 .toast {
@@ -388,12 +347,6 @@ h1 {
     <span>抽卡记录</span><span class="arrow">▾</span>
   </div>
   <div class="history-grid" id="historyGrid"></div>
-</div>
-
-<!-- 全屏预览 -->
-<div class="overlay" id="overlay" onclick="closeOverlay()">
-  <span class="overlay-close">&times;</span>
-  <img id="overlayImg" src="" alt="">
 </div>
 
 <!-- toast -->
@@ -471,21 +424,6 @@ function showImage(idx, animate) {
   const card = document.getElementById('card');
   card.className = animate ? 'card reveal' : 'card';
   card.innerHTML = `<img class="card-image" src="images/${encodeURI(images[idx])}" alt="" draggable="false" oncontextmenu="return false">`;
-  card.onclick = () => previewImage(idx);
-}
-
-// ========== 预览 ==========
-function previewImage(idx) {
-  const overlay = document.getElementById('overlay');
-  const img = document.getElementById('overlayImg');
-  img.src = `images/${encodeURI(images[idx])}`;
-  img.draggable = false;
-  img.oncontextmenu = () => false;
-  overlay.classList.add('open');
-}
-
-function closeOverlay() {
-  document.getElementById('overlay').classList.remove('open');
 }
 
 // ========== 历史 ==========
@@ -505,7 +443,7 @@ function updateHistory() {
   let html = '';
   for (let i = drawn.length - 1; i >= 0; i--) {
     const idx = drawn[i];
-    html += `<img class="history-thumb" src="images/${encodeURI(images[idx])}" alt="" loading="lazy" draggable="false" oncontextmenu="return false" onclick="previewImage(${idx})">`;
+    html += `<img class="history-thumb" src="images/${encodeURI(images[idx])}" alt="" loading="lazy" draggable="false" oncontextmenu="return false">`;
   }
   grid.innerHTML = html;
 }
@@ -524,7 +462,6 @@ document.addEventListener('keydown', e => {
     e.preventDefault();
     drawCard();
   }
-  if (e.key === 'Escape') closeOverlay();
 });
 
 // ========== 防保存 ==========
