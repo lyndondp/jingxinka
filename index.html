@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#1a1a2e">
+<title>净心卡</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="images.js"></script>
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg: #1a1a2e;
+  --card-bg: #16213e;
+  --gold: #c9a96e;
+  --text: #e8e8e8;
+  --sub: #888;
+}
+
+body {
+  font-family: -apple-system, "PingFang SC", "Noto Serif SC", serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 顶部装饰线 */
+.top-line {
+  width: 60px;
+  height: 2px;
+  background: var(--gold);
+  margin-top: 44px;
+  opacity: 0.6;
+  border-radius: 1px;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: 8px;
+  margin-top: 20px;
+  color: var(--gold);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--sub);
+  margin-top: 8px;
+  letter-spacing: 4px;
+}
+
+/* 主区域 */
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 20px;
+  gap: 30px;
+}
+
+/* 卡片容器 - 横版 */
+.card-wrapper {
+  width: min(380px, 88vw);
+  aspect-ratio: 3/2;
+  perspective: 1000px;
+  position: relative;
+}
+
+.card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  transition: transform 0.15s ease;
+  background: var(--card-bg);
+}
+
+/* 未抽卡时的占位 */
+.card.placeholder {
+  border: 2px dashed rgba(201,169,110,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  opacity: 0.3;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* 卡片图片 - contain 适配实际比例 */
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* 卡片出场动画 */
+.card.reveal {
+  animation: cardReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cardReveal {
+  0% { transform: rotateY(90deg) scale(0.8); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+}
+
+/* 洗牌状态内部 */
+.shuffle-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+}
+
+.shuffle-icon {
+  font-size: 40px;
+  color: var(--gold);
+  opacity: 0.6;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.shuffle-text {
+  font-size: 14px;
+  color: var(--gold);
+  opacity: 0.5;
+  letter-spacing: 4px;
+}
+
+/* 洗牌 - 柔和脉冲动画（无图片闪动） */
+.card.shuffling::after {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  border-radius: 20px;
+  background: radial-gradient(circle, rgba(201,169,110,0.15), transparent 70%);
+  animation: pulseGlow 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.04); }
+}
+
+/* 卡背 */
+.card-back {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #0f3460, #16213e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  backface-visibility: hidden;
+}
+
+.card-back-text {
+  font-size: 24px;
+  color: var(--gold);
+  letter-spacing: 4px;
+  opacity: 0.6;
+}
+
+/* 按钮 */
+.btn {
+  background: linear-gradient(135deg, rgba(201,169,110,0.2), rgba(201,169,110,0.1));
+  border: 1px solid rgba(201,169,110,0.4);
+  color: var(--gold);
+  padding: 14px 48px;
+  font-size: 17px;
+  letter-spacing: 4px;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  backdrop-filter: blur(10px);
+}
+
+.btn:active {
+  transform: scale(0.95);
+  background: rgba(201,169,110,0.3);
+}
+
+.btn:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* 次数计数 */
+.counter {
+  font-size: 14px;
+  color: var(--sub);
+  letter-spacing: 3px;
+}
+
+.counter span {
+  color: var(--gold);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* 底部历史 */
+.bottom-area {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 0 20px 40px;
+}
+
+.history-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--sub);
+  font-size: 13px;
+  letter-spacing: 2px;
+  padding: 12px;
+}
+
+.history-bar .arrow {
+  transition: transform 0.3s;
+  display: inline-block;
+}
+
+.history-bar.open .arrow { transform: rotate(180deg); }
+
+.history-grid {
+  display: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 0 10px;
+}
+
+.history-grid.open { display: flex; }
+
+.history-thumb {
+  width: 80px;
+  aspect-ratio: 3/2;
+  object-fit: cover;
+  border-radius: 6px;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+  flex-shrink: 0;
+}
+
+.history-thumb:active { opacity: 1; }
+
+.history-empty {
+  font-size: 12px;
+  color: var(--sub);
+  text-align: center;
+  padding: 20px;
+  letter-spacing: 2px;
+}
+
+/* 全屏预览 */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.overlay.open { display: flex; }
+
+.overlay img {
+  max-width: 95vw;
+  max-height: 90vh;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.overlay-close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+/* toast */
+.toast {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--gold);
+  color: var(--bg);
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 14px;
+  letter-spacing: 2px;
+  opacity: 0;
+  transition: opacity 0.4s;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+</style>
+</head>
+<body>
+
+<div class="top-line"></div>
+<h1>净 心 卡</h1>
+<div class="subtitle">随缘抽取 · 静心观照</div>
+
+<div class="main-area">
+  <!-- 卡片 -->
+  <div class="card-wrapper" id="cardWrapper">
+    <div class="card placeholder" id="card">
+      <div class="placeholder-icon">🌸</div>
+    </div>
+  </div>
+
+  <!-- 抽卡按钮 -->
+  <button class="btn" id="drawBtn" onclick="drawCard()">抽 一 张</button>
+
+  <!-- 次数计数 -->
+  <div class="counter" id="counter"></div>
+</div>
+<div class="bottom-area">
+  <div class="history-bar" id="historyBar" onclick="toggleHistory()">
+    <span>抽卡记录</span><span class="arrow">▾</span>
+  </div>
+  <div class="history-grid" id="historyGrid"></div>
+</div>
+
+<!-- 全屏预览 -->
+<div class="overlay" id="overlay" onclick="closeOverlay()">
+  <span class="overlay-close">&times;</span>
+  <img id="overlayImg" src="" alt="">
+</div>
+
+<!-- toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== 数据 ==========
+let images = [];
+let drawn = [];     // 已抽图索引
+let drawCount = 0;  // 本次刷新已抽次数（上限3）
+let isShuffling = false;
+
+// ========== 初始化（刷新即重置） ==========
+async function init() {
+  images = window.IMAGE_LIST || [];
+  if (images.length === 0) {
+    showToast('加载失败，请刷新');
+    return;
+  }
+  updateHistory();
+  updateCounter();
+}
+
+function updateCounter() {
+  document.getElementById('counter').innerHTML = `已抽 <span>${drawCount}</span> / 3`;
+}
+
+// ========== 抽卡（每次刷新最多3次） ==========
+async function drawCard() {
+  if (isShuffling) return;
+  if (drawCount >= 3) {
+    showToast('已抽 3 次，刷新页面可再抽');
+    return;
+  }
+
+  // 检查是否还有未抽卡片
+  const available = [];
+  for (let i = 0; i < images.length; i++) {
+    if (!drawn.includes(i)) available.push(i);
+  }
+  if (available.length === 0) {
+    showToast('全部卡片已抽完');
+    return;
+  }
+
+  isShuffling = true;
+  document.getElementById('drawBtn').disabled = true;
+
+  const card = document.getElementById('card');
+  card.className = 'card shuffling';
+  card.innerHTML = `<div class="shuffle-inner">
+    <div class="shuffle-icon">✦</div>
+    <div class="shuffle-text">随缘抽取中…</div>
+  </div>`;
+
+  await new Promise(r => setTimeout(r, 1000));
+
+  const picked = available[Math.floor(Math.random() * available.length)];
+  drawn.push(picked);
+  drawCount++;
+
+  showImage(picked, true);
+  updateCounter();
+  updateHistory();
+  isShuffling = false;
+  document.getElementById('drawBtn').disabled = false;
+
+  if (drawCount >= 3) {
+    document.getElementById('drawBtn').textContent = '已抽完';
+    document.getElementById('drawBtn').disabled = true;
+  }
+}
+
+function showImage(idx, animate) {
+  const card = document.getElementById('card');
+  card.className = animate ? 'card reveal' : 'card';
+  card.innerHTML = `<img class="card-image" src="images/${encodeURI(images[idx])}" alt="" onclick="previewImage(${idx})">`;
+}
+
+// ========== 预览 ==========
+function previewImage(idx) {
+  document.getElementById('overlayImg').src = `images/${encodeURI(images[idx])}`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeOverlay() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ========== 历史 ==========
+function toggleHistory() {
+  const bar = document.getElementById('historyBar');
+  const grid = document.getElementById('historyGrid');
+  bar.classList.toggle('open');
+  grid.classList.toggle('open');
+}
+
+function updateHistory() {
+  const grid = document.getElementById('historyGrid');
+  if (drawn.length === 0) {
+    grid.innerHTML = '<div class="history-empty">尚未抽卡</div>';
+    return;
+  }
+  let html = '';
+  for (let i = drawn.length - 1; i >= 0; i--) {
+    const idx = drawn[i];
+    html += `<img class="history-thumb" src="images/${encodeURI(images[idx])}" alt="" onclick="previewImage(${idx})" loading="lazy">`;
+  }
+  grid.innerHTML = html;
+}
+
+// ========== Toast ==========
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ========== 键盘 ==========
+document.addEventListener('keydown', e => {
+  if (e.key === ' ' || e.key === 'Enter') {
+    e.preventDefault();
+    drawCard();
+  }
+  if (e.key === 'Escape') closeOverlay();
+});
+
+// ========== Service Worker ==========
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+
+// ========== 启动 ==========
+init();
+</script>
+</body>
+</html>
