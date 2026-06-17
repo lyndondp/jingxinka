@@ -114,6 +114,17 @@ h1 {
   height: 100%;
   object-fit: contain;
   display: block;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 全屏预览图片也不可保存 */
+.overlay img {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* 卡片出场动画 */
@@ -276,6 +287,10 @@ h1 {
   opacity: 0.7;
   transition: opacity 0.3s;
   flex-shrink: 0;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
 }
 
 .history-thumb:active { opacity: 1; }
@@ -455,13 +470,18 @@ async function drawCard() {
 function showImage(idx, animate) {
   const card = document.getElementById('card');
   card.className = animate ? 'card reveal' : 'card';
-  card.innerHTML = `<img class="card-image" src="images/${encodeURI(images[idx])}" alt="" onclick="previewImage(${idx})">`;
+  card.innerHTML = `<img class="card-image" src="images/${encodeURI(images[idx])}" alt="" draggable="false" oncontextmenu="return false">`;
+  card.onclick = () => previewImage(idx);
 }
 
 // ========== 预览 ==========
 function previewImage(idx) {
-  document.getElementById('overlayImg').src = `images/${encodeURI(images[idx])}`;
-  document.getElementById('overlay').classList.add('open');
+  const overlay = document.getElementById('overlay');
+  const img = document.getElementById('overlayImg');
+  img.src = `images/${encodeURI(images[idx])}`;
+  img.draggable = false;
+  img.oncontextmenu = () => false;
+  overlay.classList.add('open');
 }
 
 function closeOverlay() {
@@ -485,7 +505,7 @@ function updateHistory() {
   let html = '';
   for (let i = drawn.length - 1; i >= 0; i--) {
     const idx = drawn[i];
-    html += `<img class="history-thumb" src="images/${encodeURI(images[idx])}" alt="" onclick="previewImage(${idx})" loading="lazy">`;
+    html += `<img class="history-thumb" src="images/${encodeURI(images[idx])}" alt="" loading="lazy" draggable="false" oncontextmenu="return false" onclick="previewImage(${idx})">`;
   }
   grid.innerHTML = html;
 }
@@ -506,6 +526,19 @@ document.addEventListener('keydown', e => {
   }
   if (e.key === 'Escape') closeOverlay();
 });
+
+// ========== 防保存 ==========
+// 禁止右键菜单
+document.addEventListener('contextmenu', e => e.preventDefault());
+// 禁止 Ctrl+S / Cmd+S 保存网页
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    showToast('图片仅供在线观照');
+  }
+});
+// 禁止拖拽
+document.addEventListener('dragstart', e => e.preventDefault());
 
 // ========== Service Worker ==========
 if ('serviceWorker' in navigator) {
